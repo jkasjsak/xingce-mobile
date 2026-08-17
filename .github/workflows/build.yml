@@ -72,6 +72,20 @@ jobs:
         env:
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
+      # buildozer/p4a 只认旧路径 tools/bin/sdkmanager，而 GitHub runner 的 SDK 装在
+      # cmdline-tools/latest/bin/sdkmanager。建个软链让它找到，否则会在"Installing SDK
+      # platform tools"这步直接失败（构建 ~1 分钟即挂）。
+      - name: Expose sdkmanager to buildozer/p4a (symlink)
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          SRC=$(ls "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          if [ -z "$SRC" ]; then echo "sdkmanager not found under cmdline-tools"; exit 1; fi
+          mkdir -p "$SDK/tools/bin"
+          ln -sf "$SRC" "$SDK/tools/bin/sdkmanager"
+          ls -l "$SDK/tools/bin/sdkmanager"
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
       - name: Build APK (debug)
         run: |
           buildozer -v android debug 2>&1 | tee buildozer_build.log
