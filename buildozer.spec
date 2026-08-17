@@ -30,11 +30,17 @@ version = 1.0.0
 android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 
 # (int) 目标 API / 最低 API
-android.api = 33
+android.api = 34
 android.minapi = 24
 
+# (str) 显式指定 NDK 版本（buildozer 自动下载，无需许可证）
+android.ndk = 28c
+
 # (str) 目标 CPU 架构（现代手机主流 arm64；如需兼容旧机可加 armeabi-v7a）
-android.arch = arm64-v8a
+android.archs = arm64-v8a
+
+# (str) SDK 路径：由 CI 的 android-actions/setup-android 注入（许可证已接受），避免 buildozer 自管 SDK 时的许可卡死
+android.sdk_path = /usr/local/lib/android/sdk
 
 # (str) 屏幕方向
 orientation = portrait
