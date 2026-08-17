@@ -19,6 +19,7 @@ from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.metrics import dp
+from kivy.utils import platform as kivy_platform
 
 from data_store import DataStore, get_base_dir, PAPER_TYPES
 from core import ACCENT, TimerController
@@ -49,7 +50,10 @@ NAV = [
 
 class XingceApp(App):
     def build(self):
-        Window.size = (400, 800)
+        # 手机端让窗口自动撑满整屏（绝不可写死 Window.size，否则会缩成左下角小方块）；
+        # 仅桌面调试时用固定尺寸方便预览。
+        if kivy_platform != "android":
+            Window.size = (400, 800)
         Window.softinput_mode = "below_target"
 
         base = get_base_dir()
