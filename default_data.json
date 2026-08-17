@@ -1,0 +1,394 @@
+{
+  "modules": [
+    {
+      "key": "zzll",
+      "name": "政治理论",
+      "total": 0,
+      "points": 0.7,
+      "color": "#EF6F6C"
+    },
+    {
+      "key": "cspd",
+      "name": "常识判断",
+      "total": 15,
+      "points": 0.6,
+      "color": "#E5945C"
+    },
+    {
+      "key": "yy_frag",
+      "name": "言语·片段阅读",
+      "total": 15,
+      "points": 0.7,
+      "color": "#C084CB"
+    },
+    {
+      "key": "yy_logic",
+      "name": "言语·选词填空",
+      "total": 10,
+      "points": 0.5,
+      "color": "#B070C0"
+    },
+    {
+      "key": "yy_art",
+      "name": "言语·文章阅读",
+      "total": 5,
+      "points": 0.7,
+      "color": "#D49BE0"
+    },
+    {
+      "key": "sl_num",
+      "name": "数量·数字推理",
+      "total": 5,
+      "points": 0.5,
+      "color": "#5AA9E6"
+    },
+    {
+      "key": "sl_math",
+      "name": "数量·数学运算",
+      "total": 10,
+      "points": 0.9,
+      "color": "#3E8FCF"
+    },
+    {
+      "key": "pd_graph",
+      "name": "判断·图形推理",
+      "total": 15,
+      "points": 0.8,
+      "color": "#4FC0A8"
+    },
+    {
+      "key": "pd_ana",
+      "name": "判断·类比推理",
+      "total": 10,
+      "points": 0.5,
+      "color": "#3DA98F"
+    },
+    {
+      "key": "pd_def",
+      "name": "判断·定义判断",
+      "total": 15,
+      "points": 0.8,
+      "color": "#5FCFB6"
+    },
+    {
+      "key": "pd_logic",
+      "name": "判断·逻辑判断",
+      "total": 10,
+      "points": 0.8,
+      "color": "#2E9C84"
+    },
+    {
+      "key": "zlfx",
+      "name": "资料分析",
+      "total": 20,
+      "points": 0.9,
+      "color": "#F2C14E"
+    }
+  ],
+  "exams": [],
+  "goal": {},
+  "custom_papers": [],
+  "paper_config": {
+    "江苏A类": {
+      "zzll": {
+        "total": 10,
+        "perq": 0.7
+      },
+      "cspd": {
+        "total": 10,
+        "perq": 0.6
+      },
+      "yy_frag": {
+        "total": 15,
+        "perq": 0.7
+      },
+      "yy_logic": {
+        "total": 10,
+        "perq": 0.5
+      },
+      "yy_art": {
+        "total": 5,
+        "perq": 0.7
+      },
+      "sl_num": {
+        "total": 5,
+        "perq": 0.7
+      },
+      "sl_math": {
+        "total": 15,
+        "perq": 0.9
+      },
+      "pd_graph": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_ana": {
+        "total": 10,
+        "perq": 0.5
+      },
+      "pd_def": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_logic": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "zlfx": {
+        "total": 20,
+        "perq": 0.9
+      }
+    },
+    "江苏B类": {
+      "zzll": {
+        "total": 10,
+        "perq": 0.7
+      },
+      "cspd": {
+        "total": 10,
+        "perq": 0.6
+      },
+      "yy_frag": {
+        "total": 15,
+        "perq": 0.7
+      },
+      "yy_logic": {
+        "total": 10,
+        "perq": 0.5
+      },
+      "yy_art": {
+        "total": 5,
+        "perq": 0.7
+      },
+      "sl_num": {
+        "total": 5,
+        "perq": 0.7
+      },
+      "sl_math": {
+        "total": 15,
+        "perq": 0.9
+      },
+      "pd_graph": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_ana": {
+        "total": 10,
+        "perq": 0.5
+      },
+      "pd_def": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_logic": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "zlfx": {
+        "total": 20,
+        "perq": 0.9
+      }
+    },
+    "江苏C类": {
+      "zzll": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "cspd": {
+        "total": 10,
+        "perq": 0.7
+      },
+      "yy_frag": {
+        "total": 15,
+        "perq": 0.7
+      },
+      "yy_logic": {
+        "total": 10,
+        "perq": 0.6
+      },
+      "yy_art": {
+        "total": 5,
+        "perq": 0.8
+      },
+      "sl_num": {
+        "total": 5,
+        "perq": 0.7
+      },
+      "sl_math": {
+        "total": 10,
+        "perq": 0.9
+      },
+      "pd_graph": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_ana": {
+        "total": 10,
+        "perq": 0.6
+      },
+      "pd_def": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_logic": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "zlfx": {
+        "total": 20,
+        "perq": 0.9
+      }
+    },
+    "国考副省级": {
+      "zzll": {
+        "total": 20,
+        "perq": 0.5
+      },
+      "cspd": {
+        "total": 15,
+        "perq": 0.5
+      },
+      "yy_frag": {
+        "total": 15,
+        "perq": 0.75
+      },
+      "yy_logic": {
+        "total": 15,
+        "perq": 0.75
+      },
+      "yy_art": {
+        "total": 0,
+        "perq": 0
+      },
+      "sl_num": {
+        "total": 0,
+        "perq": 0
+      },
+      "sl_math": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "pd_graph": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_ana": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_def": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_logic": {
+        "total": 5,
+        "perq": 0.8
+      },
+      "zlfx": {
+        "total": 20,
+        "perq": 1.0
+      }
+    },
+    "国考地市级": {
+      "zzll": {
+        "total": 20,
+        "perq": 0.525
+      },
+      "cspd": {
+        "total": 15,
+        "perq": 0.5
+      },
+      "yy_frag": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "yy_logic": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "yy_art": {
+        "total": 0,
+        "perq": 0
+      },
+      "sl_num": {
+        "total": 0,
+        "perq": 0
+      },
+      "sl_math": {
+        "total": 10,
+        "perq": 1.0
+      },
+      "pd_graph": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_ana": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_def": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_logic": {
+        "total": 5,
+        "perq": 0.8
+      },
+      "zlfx": {
+        "total": 20,
+        "perq": 1.0
+      }
+    },
+    "国考行政执法": {
+      "zzll": {
+        "total": 20,
+        "perq": 0.5
+      },
+      "cspd": {
+        "total": 15,
+        "perq": 0.5
+      },
+      "yy_frag": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "yy_logic": {
+        "total": 15,
+        "perq": 0.8
+      },
+      "yy_art": {
+        "total": 0,
+        "perq": 0
+      },
+      "sl_num": {
+        "total": 0,
+        "perq": 0
+      },
+      "sl_math": {
+        "total": 10,
+        "perq": 1.05
+      },
+      "pd_graph": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_ana": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_def": {
+        "total": 10,
+        "perq": 0.8
+      },
+      "pd_logic": {
+        "total": 5,
+        "perq": 0.8
+      },
+      "zlfx": {
+        "total": 20,
+        "perq": 1.0
+      }
+    }
+  },
+  "config_version": 3
+}
