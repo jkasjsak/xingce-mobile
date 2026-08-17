@@ -19,10 +19,14 @@ jobs:
           python-version: '3.11'
 
       - name: Install system dependencies
+        # 必须含 libtool/libtool-bin/automake/autoconf/pkg-config：
+        # p4a 从源码编译 libpng/freetype/sdl2 等配方要走 autoreconf，
+        # 缺 libtool 的 m4 宏（LT_SYS_SYMBOL_USCORE）会直接失败。
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git python3-pip openjdk-17-jdk \
-            unzip zlib1g-dev libncurses5-dev ccache libssl-dev
+            unzip zlib1g-dev libncurses5-dev ccache libssl-dev \
+            libtool libtool-bin automake autoconf pkg-config
 
       - name: Install buildozer & cython
         # kivy 2.3.1 的 Android recipe 需要 cython 0.29.x（不是 3.x）
