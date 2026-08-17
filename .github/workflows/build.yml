@@ -19,17 +19,23 @@ jobs:
           python-version: '3.11'
 
       - name: Install system dependencies
-        # 必须含 libtool/libtool-bin/automake/autoconf/pkg-config/libltdl-dev：
-        # p4a 从源码编译 libpng/freetype/sdl2/libffi 等配方要走 autoreconf，
-        # 缺 libtool 的 m4 宏（LT_SYS_SYMBOL_USCORE，由 libltdl-dev 提供 libtool.m4）
-        # 会直接失败。cmake 供 libjpeg-turbo 配方使用。
+        # p4a 从源码编译 libpng/freetype/sdl2/libffi 等配方要走 autoreconf/autopoint。
+        # Ubuntu 24.04 上 autopoint 已从 gettext 拆出为独立包，必须显式装 autopoint。
+        # libltdl-dev 提供 libtool.m4（LT_SYS_SYMBOL_USCORE 宏）；cmake 供 libjpeg-turbo。
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git python3-pip openjdk-17-jdk \
-            unzip zlib1g-dev libncurses5-dev ccache libssl-dev \
-            libtool libtool-bin automake autoconf pkg-config libltdl-dev cmake libffi-dev gettext
+            unzip zlib1g-dev libncurses5-dev libncursesw5-dev ccache libssl-dev \
+            libtool libtool-bin automake autoconf pkg-config libltdl-dev cmake libffi-dev \
+            gettext autopoint texinfo bison flex
           # 确保 aclocal 能找到 libtool 的 m4 宏目录
           echo "ACLOCAL_PATH=/usr/share/aclocal" >> "$GITHUB_ENV"
+          # 显式验证关键 autotools 工具齐全，缺一个立刻失败而非浪费 6 分钟构建
+          for t in autoconf automake libtool autoreconf autopoint pkg-config cmake; do
+            command -v "$t" >/dev/null 2>&1 || { echo "MISSING TOOL: $t"; exit 1; }
+            echo "ok: $t -> $(command -v $t)"
+          done
+          autopoint --version | head -1
 
       - name: Install buildozer & cython
         # kivy 2.3.1 的 Android recipe 需要 cython 0.29.x（不是 3.x）
