@@ -24,8 +24,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git python3-pip openjdk-17-jdk \
-            unzip zlib1g-dev libncurses5-dev ccache libssl-dev
+          sudo apt-get install -y build-essential git python3-pip openjdk-17-jdk unzip zlib1g-dev libncurses5-dev ccache libssl-dev
 
       - name: Set up Android SDK (licenses accepted)
         uses: android-actions/setup-android@v3
@@ -44,13 +43,17 @@ jobs:
           sed -i "s|^android.sdk_path = .*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
           grep android.sdk_path buildozer.spec
 
+      - name: Fix legacy sdkmanager for JDK 17
+        run: |
+          MODERN=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          printf '#!/bin/sh\nexec "%s" "$@"\n' "$MODERN" > "$ANDROID_HOME/tools/bin/sdkmanager"
+          chmod +x "$ANDROID_HOME/tools/bin/sdkmanager"
+          "$ANDROID_HOME/tools/bin/sdkmanager" --version
+
       - name: Download CJK font (charts need Chinese glyphs)
         run: |
           mkdir -p fonts
-          curl -fL -o fonts/msyh.ttf \
-            "https://github.com/anthonyfok/fonts-wqy-microhei/raw/master/wqy-microhei.ttc" \
-            || curl -fL -o fonts/msyh.ttf \
-            "https://github.com/StellarCN/scp_zh/raw/master/fonts/SourceHanSansSC-Regular.otf"
+          curl -fL -o fonts/msyh.ttf "https://github.com/anthonyfok/fonts-wqy-microhei/raw/master/wqy-microhei.ttc" || curl -fL -o fonts/msyh.ttf "https://github.com/StellarCN/scp_zh/raw/master/fonts/SourceHanSansSC-Regular.otf"
           ls -la fonts/
 
       - name: Build APK (debug)
