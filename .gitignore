@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.tmp
+
+# 虚拟环境（打包用，不进仓库）
+.venv/
+
+# 构建中间产物
+bin/
+build/
+dist/
+wheels/
+.buildozer/
+
+# 本地数据（用户数据不入库）
+*.json
+!default_data.json
