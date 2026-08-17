@@ -1,0 +1,50 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git python3-pip openjdk-17-jdk \
+            unzip zlib1g-dev libncurses5-dev ccache libssl-dev
+
+      - name: Install buildozer & cython
+        # kivy 2.3.1 的 Android recipe 需要 cython 0.29.x（不是 3.x）
+        run: |
+          pip install --upgrade pip
+          pip install "cython==0.29.36" buildozer
+
+      - name: Download CJK font (for chart Chinese text)
+        run: |
+          mkdir -p fonts
+          curl -fL -o fonts/msyh.ttf \
+            "https://github.com/StellarCN/scp_zh/raw/master/fonts/SourceHanSansSC-Regular.otf" \
+            || curl -fL -o fonts/msyh.ttf \
+            "https://github.com/anthonyfok/fonts-wqy-microhei/raw/master/wqy-microhei.ttc"
+          ls -la fonts/
+
+      - name: Build APK (debug)
+        run: buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xingce-mobile-apk
+          path: bin/*.apk
+          if-no-files-found: error
