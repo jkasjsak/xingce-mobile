@@ -157,3 +157,30 @@ class TimerController:
         if self.state["end"]:
             return self.state["accum"] + (self.state["end"] - self.state["seg_start"]).total_seconds()
         return self.state["accum"] + (now - self.state["seg_start"]).total_seconds()
+
+
+# ---- 清新扁平化配色（hex，供 Kivy UI 统一使用）----
+COLORS = {
+    "bg": "#F4F6FA",          # 极浅灰蓝白背景
+    "surface": "#FFFFFF",      # 卡片表面
+    "surface_alt": "#F7F9FC",  # 次级表面
+    "text": "#1F2733",         # 主文字
+    "muted": "#5B6B82",        # 次要文字
+    "accent": "#2F6FED",       # 强调蓝
+    "accent_soft": "#E8F0FE",  # 强调蓝浅底
+    "success": "#22A06B",
+    "warning": "#E0922B",
+    "danger": "#E5534B",
+    "border": "#E3E8F0",       # 边框/分隔
+}
+
+
+def hex2rgb(h, alpha=1.0):
+    """#RRGGBB -> (r,g,b,a) 0~1，供 Kivy 颜色使用。"""
+    h = h.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+    return (r, g, b, alpha)
+
+
+def C(name, alpha=1.0):
+    return hex2rgb(COLORS[name], alpha)

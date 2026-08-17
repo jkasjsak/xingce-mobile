@@ -26,7 +26,8 @@ class TrendsScreen(BaseScreen):
         bar = BoxLayout(size_hint_y=None, height=dp(40))
         bar.add_widget(sp)
         box.add_widget(bar)
-        self.body = BoxLayout(orientation="vertical")
+        self.body = BoxLayout(orientation="vertical", size_hint_y=None)
+        self.body.bind(minimum_height=self.body.setter("height"))
         box.add_widget(self.body)
         self._render()
 

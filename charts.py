@@ -25,7 +25,7 @@ from kivy.core.image import Image as CoreImage
 from kivy.metrics import dp
 from kivy.utils import platform as kplatform
 
-from core import CN_FONT
+from core import CN_FONT, C
 
 DPI = 85
 
@@ -43,7 +43,8 @@ def _cn_font_name():
 
 class KivyChart(BoxLayout):
     def __init__(self, figsize=(7.0, 4.0), export=True, **kw):
-        super().__init__(orientation="vertical", **kw)
+        # size_hint_y=None + 固定高度：放进滚动盒后各图表独立占位、不再叠在一起
+        super().__init__(orientation="vertical", size_hint_y=None, height=dp(360), **kw)
         self.figsize = figsize
         self.fig = None
         self._scatter = Scatter(
@@ -63,8 +64,8 @@ class KivyChart(BoxLayout):
                 size_hint=(None, 1),
                 width=dp(120),
                 font_name=_cn_font_name(),
-                background_color=(0.93, 0.95, 1.0, 1),
-                color=(0.18, 0.43, 0.93, 1),
+                background_color=C("accent_soft"),
+                color=C("accent"),
             )
             btn_reset.bind(on_press=lambda *a: self.reset_view())
             btn_save = Button(
@@ -72,15 +73,15 @@ class KivyChart(BoxLayout):
                 size_hint=(None, 1),
                 width=dp(120),
                 font_name=_cn_font_name(),
-                background_color=(0.92, 0.98, 0.94, 1),
-                color=(0.13, 0.63, 0.42, 1),
+                background_color=C("surface_alt"),
+                color=C("success"),
             )
             btn_save.bind(on_press=lambda *a: self.save_image())
             hint = Label(
                 text="单指拖动 · 双指缩放",
                 size_hint=(1, 1),
                 font_name=_cn_font_name(),
-                color=(0.48, 0.52, 0.58, 1),
+                color=C("muted"),
                 halign="right",
             )
             bar.add_widget(btn_reset)

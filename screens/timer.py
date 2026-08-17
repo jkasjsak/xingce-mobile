@@ -91,38 +91,57 @@ class TimerScreen(BaseScreen):
             pass
 
     def _start(self):
-        self.app().timer.start()
-        self._after_action()
+        try:
+            self.app().timer.start()
+            self._after_action()
+        except Exception:
+            import traceback; traceback.print_exc()
 
     def _pause(self):
-        self.app().timer.pause()
-        self._after_action()
+        try:
+            self.app().timer.pause()
+            self._after_action()
+        except Exception:
+            import traceback; traceback.print_exc()
 
     def _resume(self):
-        self.app().timer.resume()
-        self._after_action()
+        try:
+            self.app().timer.resume()
+            self._after_action()
+        except Exception:
+            import traceback; traceback.print_exc()
 
     def _reset(self):
-        self.app().timer.reset()
-        self.status_label.text = self._status_text()
-        self.elapsed_label.text = fmt_elapsed(0)
-        self._refresh_buttons()
+        try:
+            self.app().timer.reset()
+            self.status_label.text = self._status_text()
+            self.elapsed_label.text = fmt_elapsed(0)
+            self._refresh_buttons()
+        except Exception:
+            import traceback; traceback.print_exc()
 
     def _after_action(self):
-        self.status_label.text = self._status_text()
-        self.elapsed_label.text = fmt_elapsed(self.app().timer.elapsed())
-        self._refresh_buttons()
+        try:
+            self.status_label.text = self._status_text()
+            self.elapsed_label.text = fmt_elapsed(self.app().timer.elapsed())
+            self._refresh_buttons()
+        except Exception:
+            import traceback; traceback.print_exc()
 
     def _finish(self):
-        t = self.app().timer
-        sec = t.elapsed()
-        dur_min = round(sec / 60.0, 1)
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.app().pending_timer = {
-            "duration_min": dur_min,
-            "start_time": t.state["start"].strftime("%Y-%m-%d %H:%M:%S") if t.state["start"] else None,
-            "end_time": now,
-        }
-        t.reset()
-        self._after_action()
-        self.app().open_add(None)
+        try:
+            t = self.app().timer
+            sec = t.elapsed()
+            dur_min = round(sec / 60.0, 1)
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            st = t.state.get("start")
+            self.app().pending_timer = {
+                "duration_min": dur_min,
+                "start_time": st.strftime("%Y-%m-%d %H:%M:%S") if isinstance(st, datetime) else None,
+                "end_time": now,
+            }
+            t.reset()
+            self._after_action()
+            self.app().open_add(None)
+        except Exception:
+            import traceback; traceback.print_exc()

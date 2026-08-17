@@ -5,9 +5,6 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,42 +21,26 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git python3 python3-pip openjdk-17-jdk \
-            unzip zip zlib1g-dev libncurses5-dev libssl-dev libffi-dev libltdl-dev \
-            libsqlite3-dev automake autoconf libtool pkg-config ccache patch bison gettext
-
-      - name: Set up Android SDK (licenses accepted)
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK licenses
-        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Install Android platform / build-tools
-        run: |
-          sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          sudo apt-get install -y build-essential git python3-pip openjdk-17-jdk \
+            unzip zlib1g-dev libncurses5-dev ccache libssl-dev
 
       - name: Install buildozer & cython
+        # kivy 2.3.1 的 Android recipe 需要 cython 0.29.x（不是 3.x）
         run: |
           pip install --upgrade pip
           pip install "cython==0.29.36" buildozer
 
-      - name: Point buildozer at pre-installed SDK
-        run: |
-          sed -i "s|^android.sdk_path = .*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
-          grep android.sdk_path buildozer.spec
-
-      - name: Fix legacy sdkmanager for JDK 17
-        run: |
-          MODERN=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
-          printf '#!/bin/sh\nexec "%s" "$@"\n' "$MODERN" > "$ANDROID_HOME/tools/bin/sdkmanager"
-          chmod +x "$ANDROID_HOME/tools/bin/sdkmanager"
-          "$ANDROID_HOME/tools/bin/sdkmanager" --version
-
-      - name: Download CJK font (charts need Chinese glyphs)
+      - name: Download CJK font (pure TTF, Kivy-friendly)
+        # 必须是纯 TrueType (.ttf glyf)，Kivy/SDL2 才能稳定加载中文；
+        # OTF(CFF)/TTC 在安卓上加载不稳，会导致中文乱码、且动态重建的文字控件渲染时崩溃闪退。
         run: |
           mkdir -p fonts
-          curl -fL -o fonts/msyh.ttf "https://github.com/anthonyfok/fonts-wqy-microhei/raw/master/wqy-microhei.ttc" || curl -fL -o fonts/msyh.ttf "https://github.com/StellarCN/scp_zh/raw/master/fonts/SourceHanSansSC-Regular.otf"
+          rm -f fonts/msyh.ttf
+          curl -fL -o fonts/msyh.ttf "https://github.com/anthonyfok/fonts-wqy-zenhei/raw/master/wqy-zenhei.ttf" \
+            || curl -fL -o fonts/msyh.ttf "https://github.com/layerssss/wqy/raw/master/wqy-zenhei.ttf" \
+            || curl -fL -o fonts/msyh.ttf "https://github.com/StellarCN/scp_zh/raw/master/fonts/SourceHanSansSC-Regular.otf"
           ls -la fonts/
+          echo "font header:"; head -c4 fonts/msyh.ttf | xxd | head -1
 
       - name: Build APK (debug)
         run: buildozer android debug

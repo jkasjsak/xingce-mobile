@@ -78,7 +78,8 @@ class AddScreen(BaseScreen):
             self.total_labels[key] = tlabel
             wi = TextInput(
                 text=str(existing.get(key, {}).get("wrong", "") if isinstance(existing.get(key), dict) else ""),
-                hint_text="错题", input_filter="int", size_hint=(0.22, 1),
+                hint_text="错题", input_filter="int", input_type="number",
+                size_hint=(0.22, 1),
                 font_name=cn(), font_size=dp(13), multiline=False,
             )
             self.wrong_inputs[key] = wi

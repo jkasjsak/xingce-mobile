@@ -22,7 +22,7 @@ from kivy.metrics import dp
 from kivy.utils import platform as kivy_platform
 
 from data_store import DataStore, get_base_dir, PAPER_TYPES
-from core import ACCENT, TimerController
+from core import ACCENT, TimerController, C
 from ui import make_scroll, cn
 
 import screens.overview as overview
@@ -54,6 +54,7 @@ class XingceApp(App):
         # 仅桌面调试时用固定尺寸方便预览。
         if kivy_platform != "android":
             Window.size = (400, 800)
+        Window.clearcolor = C("bg")  # 清新浅色背景（根治整体发黑）
         Window.softinput_mode = "below_target"
 
         base = get_base_dir()
@@ -82,9 +83,9 @@ class XingceApp(App):
         self.nav_buttons = {}
         for name, label in NAV:
             b = Button(
-                text=label, size_hint=(None, 1), width=dp(64),
-                font_name=cn(), font_size=dp(13),
-                background_color=(0.96, 0.97, 0.99, 1), color=(0.3, 0.34, 0.4, 1),
+                text=label, size_hint=(None, 1), width=dp(66),
+                font_name=cn(), font_size=dp(14),
+                background_color=C("surface_alt"), color=C("text"),
                 on_press=lambda *a, n=name: self.go(n),
             )
             self.nav_buttons[name] = b
@@ -120,11 +121,11 @@ class XingceApp(App):
     def _highlight(self, name):
         for n, b in self.nav_buttons.items():
             if n == name:
-                b.background_color = (0.18, 0.43, 0.93, 1)
+                b.background_color = C("accent")
                 b.color = (1, 1, 1, 1)
             else:
-                b.background_color = (0.96, 0.97, 0.99, 1)
-                b.color = (0.3, 0.34, 0.4, 1)
+                b.background_color = C("surface_alt")
+                b.color = C("text")
 
     # ---- 数据变更后刷新相关屏 ----
     def refresh(self, *names):

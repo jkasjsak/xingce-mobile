@@ -9,8 +9,9 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
+from kivy.graphics import Color, RoundedRectangle
 from kivy.metrics import dp
-from core import CN_FONT, ACCENT
+from core import CN_FONT, ACCENT, C
 
 
 def cn():
@@ -27,26 +28,41 @@ def make_scroll():
 
 class Card(BoxLayout):
     def __init__(self, title=None, **kw):
-        super().__init__(orientation="vertical", size_hint_y=None, padding=dp(12), spacing=dp(6), **kw)
+        super().__init__(orientation="vertical", size_hint_y=None, padding=dp(12), spacing=dp(8), **kw)
         self.bind(minimum_height=self.setter("height"))
+        # 清新扁平：白色圆角表面 + 浅边框
+        with self.canvas.before:
+            Color(*C("border"))
+            self._bg_border = RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(12)])
+            Color(*C("surface"))
+            self._bg = RoundedRectangle(pos=(self.x + dp(1), self.y + dp(1)),
+                                       size=(self.width - dp(2), self.height - dp(2)),
+                                       radius=[dp(11)])
+        self.bind(size=self._redraw, pos=self._redraw)
         if title:
             tl = Label(
                 text=title, font_name=cn(), font_size=dp(15), bold=True,
-                color=(0.18, 0.43, 0.93, 1), size_hint_y=None, height=dp(26), halign="left",
+                color=C("accent"), size_hint_y=None, height=dp(26), halign="left",
             )
             self.add_widget(tl)
+
+    def _redraw(self, *a):
+        self._bg_border.pos = self.pos
+        self._bg_border.size = self.size
+        self._bg.pos = (self.x + dp(1), self.y + dp(1))
+        self._bg.size = (self.width - dp(2), self.height - dp(2))
 
 
 def header(parent, title, sub=""):
     box = BoxLayout(orientation="vertical", size_hint_y=None, height=dp(54), padding=(dp(2), 0))
     box.add_widget(Label(
         text=title, font_name=cn(), font_size=dp(20), bold=True,
-        color=(0.12, 0.15, 0.2, 1), size_hint_y=None, height=dp(30), halign="left",
+        color=C("text"), size_hint_y=None, height=dp(30), halign="left",
     ))
     if sub:
         box.add_widget(Label(
             text=sub, font_name=cn(), font_size=dp(13),
-            color=(0.36, 0.4, 0.45, 1), size_hint_y=None, height=dp(20), halign="left",
+            color=C("muted"), size_hint_y=None, height=dp(20), halign="left",
         ))
     parent.add_widget(box)
 
@@ -54,7 +70,7 @@ def header(parent, title, sub=""):
 def empty_hint(parent, msg="暂无数据"):
     parent.add_widget(Label(
         text=msg, font_name=cn(), font_size=dp(14),
-        color=(0.48, 0.52, 0.58, 1), size_hint_y=None, height=dp(44), halign="left",
+        color=C("muted"), size_hint_y=None, height=dp(44), halign="left",
     ))
 
 
@@ -65,7 +81,7 @@ def paper_spinner(values, current, callback):
         values=["全部卷型"] + list(values),
         size_hint=(None, None), height=dp(36), width=dp(150),
         font_name=cn(), font_size=dp(13),
-        background_color=(0.96, 0.97, 0.99, 1), color=(0.2, 0.24, 0.3, 1),
+        background_color=C("surface"), color=C("text"),
     )
     sp.bind(text=lambda inst, txt: callback("" if txt == "全部卷型" else txt))
     return sp
