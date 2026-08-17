@@ -21,7 +21,8 @@ source.exclude_patterns = *.pyc,*.pyo,._*,*~,extract_wheels.py,_mock_run.py,site
 source.main = main.py
 
 # (list) 依赖（buildozer 经 python-for-android 自动拉取对应 Android 轮子）
-requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,numpy,matplotlib,pillow,python-dateutil,pytz,six,cycler,kiwisolver,fonttools
+# 注意：numpy/matplotlib/pillow 是编译型依赖，必须锁版本，否则某次上游发新版可能直接打挂安卓构建。
+requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,numpy==1.26.4,matplotlib==3.7.5,pillow==10.3.0,python-dateutil==2.9.0,pytz==2024.1,six==1.16.0,cycler==0.12.1,kiwisolver==1.10.0,fonttools==4.51.0
 
 # (str) 应用版本
 version = 1.0.0
@@ -41,6 +42,8 @@ android.archs = arm64-v8a
 
 # (str) SDK 路径：由 CI 的 android-actions/setup-android 注入（许可证已接受），避免 buildozer 自管 SDK 时的许可卡死
 android.sdk_path = /usr/local/lib/android/sdk
+# 自动接受 SDK 许可，避免 sdkmanager 因许可未确认而在构建早期直接失败
+android.accept_sdk_license = True
 
 # (str) 屏幕方向
 orientation = portrait

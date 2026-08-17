@@ -65,10 +65,27 @@ jobs:
           ls -la fonts/
           echo "font sfnt header:"; head -c4 fonts/msyh.ttf | od -An -tx1
 
+      - name: Accept Android SDK licenses (belt & suspenders)
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
       - name: Build APK (debug)
-        run: buildozer android debug
+        run: |
+          buildozer -v android debug 2>&1 | tee buildozer_build.log
+
+      - name: Upload build log (diagnostics, always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-log
+          path: buildozer_build.log
+          if-no-files-found: ignore
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: xingce-mobile-apk
