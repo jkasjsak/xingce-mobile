@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,19 +27,30 @@ jobs:
           sudo apt-get install -y build-essential git python3-pip openjdk-17-jdk \
             unzip zlib1g-dev libncurses5-dev ccache libssl-dev
 
+      - name: Set up Android SDK (licenses accepted)
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform / build-tools
+        run: |
+          sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+
       - name: Install buildozer & cython
-        # kivy 2.3.1 的 Android recipe 需要 cython 0.29.x（不是 3.x）
         run: |
           pip install --upgrade pip
           pip install "cython==0.29.36" buildozer
 
-      - name: Download CJK font (for chart Chinese text)
+      - name: Point buildozer at pre-installed SDK
+        run: |
+          sed -i "s|^android.sdk_path = .*|android.sdk_path = $ANDROID_HOME|" buildozer.spec
+          grep android.sdk_path buildozer.spec
+
+      - name: Download CJK font (charts need Chinese glyphs)
         run: |
           mkdir -p fonts
           curl -fL -o fonts/msyh.ttf \
-            "https://github.com/StellarCN/scp_zh/raw/master/fonts/SourceHanSansSC-Regular.otf" \
+            "https://github.com/anthonyfok/fonts-wqy-microhei/raw/master/wqy-microhei.ttc" \
             || curl -fL -o fonts/msyh.ttf \
-            "https://github.com/anthonyfok/fonts-wqy-microhei/raw/master/wqy-microhei.ttc"
+            "https://github.com/StellarCN/scp_zh/raw/master/fonts/SourceHanSansSC-Regular.otf"
           ls -la fonts/
 
       - name: Build APK (debug)
