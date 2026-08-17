@@ -1,0 +1,56 @@
+[app]
+
+# (str) 应用标题
+title = 行测模考分析
+
+# (str) 包名
+package.name = xingcemobile
+# (str) 域名（反向，用于包名前缀）
+package.domain = com.xingce
+
+# (str) 源码目录（. 表示当前项目根）
+source.dir = .
+# (list) 包含的扩展名
+source.include_exts = py,png,jpg,kv,json,ttf,otf,ttc,txt
+# (list) 必须排除的目录：.venv 含桌面二进制（数百 MB 且不兼容安卓），务必排除！
+source.exclude_dirs = .venv,tests,.git,__pycache__,wheels,build,dist
+# (list) 排除模式
+source.exclude_patterns = *.pyc,*.pyo,._*,*~,extract_wheels.py,_mock_run.py,sitecustomize.py
+
+# (list) 入口：buildozer 会找 main.py 里的 XingceApp
+source.main = main.py
+
+# (list) 依赖（buildozer 经 python-for-android 自动拉取对应 Android 轮子）
+requirements = python3==3.11,kivy==2.3.1,pandas,numpy,matplotlib,pillow,python-dateutil,pytz,six,cycler,kiwisolver,fonttools
+
+# (str) 应用版本
+version = 1.0.0
+
+# (list) 权限（Android 11+ 走作用域存储；旧版读写下载目录用）
+android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
+
+# (int) 目标 API / 最低 API
+android.api = 33
+android.minapi = 24
+
+# (str) 目标 CPU 架构（现代手机主流 arm64；如需兼容旧机可加 armeabi-v7a）
+android.arch = arm64-v8a
+
+# (str) 屏幕方向
+orientation = portrait
+
+# (bool) 允许备份
+android.allow_backup = True
+android.accept_backup_rules = True
+
+# (list) 额外资源（中文字体已入库 fonts/msyh.ttf，CI 仍会兜底下载）
+presplash.filename =
+icon.filename =
+
+[buildozer]
+
+# (int) 日志等级
+log_level = 2
+
+# (str) 默认目标
+default.target = android
