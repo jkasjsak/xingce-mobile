@@ -21,7 +21,7 @@ source.exclude_patterns = *.pyc,*.pyo,._*,*~,extract_wheels.py,_mock_run.py,site
 source.main = main.py
 
 # (list) 依赖（buildozer 经 python-for-android 自动拉取对应 Android 轮子）
-requirements = python3==3.11,kivy==2.3.1,pandas,numpy,matplotlib,pillow,python-dateutil,pytz,six,cycler,kiwisolver,fonttools
+requirements = hostpython3==3.11,python3==3.11,kivy==2.3.1,pandas,numpy,matplotlib,pillow,python-dateutil,pytz,six,cycler,kiwisolver,fonttools
 
 # (str) 应用版本
 version = 1.0.0
