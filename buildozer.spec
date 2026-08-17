@@ -21,8 +21,10 @@ source.exclude_patterns = *.pyc,*.pyo,._*,*~,extract_wheels.py,_mock_run.py,site
 source.main = main.py
 
 # (list) 依赖（buildozer 经 python-for-android 自动拉取对应 Android 轮子）
-# 注意：numpy/matplotlib/pillow 是编译型依赖，必须锁版本，否则某次上游发新版可能直接打挂安卓构建。
-requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,numpy==1.26.4,matplotlib==3.7.5,pillow==10.3.0,python-dateutil==2.9.0,pytz==2024.1,six==1.16.0,cycler==0.12.1,kiwisolver==1.10.0,fonttools==4.51.0
+# 只锁编译型依赖（numpy/matplotlib/pillow）防止上游发新版打挂安卓构建；
+# 纯 Python 的 kiwisolver/cycler/fonttools/python-dateutil/pytz/six 不锁版本，
+# 交由 p4a 作为 matplotlib 的依赖自动解析（避免写出不存在的版本号导致 git checkout 失败）。
+requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,numpy==1.26.4,matplotlib==3.7.5,pillow==10.3.0,python-dateutil,pytz,six,cycler,kiwisolver,fonttools
 
 # (str) 应用版本
 version = 1.0.0

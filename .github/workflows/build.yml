@@ -88,6 +88,9 @@ jobs:
 
       - name: Build APK (debug)
         run: |
+          # pipefail 确保 buildozer 自身失败（如依赖版本不存在）会真正让本步失败，
+          # 否则被 tee 吞掉退出码，会误判为成功。
+          set -o pipefail
           buildozer -v android debug 2>&1 | tee buildozer_build.log
 
       - name: Upload build log (diagnostics, always)
