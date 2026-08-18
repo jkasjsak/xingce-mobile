@@ -12,6 +12,50 @@
 import os
 import sys
 
+# ---- 崩溃自报：捕获导入/启动期异常并显示在屏幕上，避免“直接闪退无提示” ----
+import traceback as _tb
+
+_CRASH_PATH = None
+
+
+def _crash_path():
+    global _CRASH_PATH
+    if _CRASH_PATH is None:
+        try:
+            _CRASH_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xingce_crash.log")
+        except Exception:
+            _CRASH_PATH = os.path.join(os.getcwd(), "xingce_crash.log")
+    return _CRASH_PATH
+
+
+def _write_crash(text):
+    try:
+        with open(_crash_path(), "w", encoding="utf-8") as f:
+            f.write(text)
+    except Exception:
+        pass
+
+
+def _excepthook(et, ev, tb):
+    text = "".join(_tb.format_exception(et, ev, tb))
+    _write_crash("=== Python 未捕获异常 ===\n" + text)
+    try:
+        sys.__excepthook__(et, ev, tb)
+    except Exception:
+        pass
+
+
+sys.excepthook = _excepthook
+
+# 原生崩溃（C 层 segfault，如 SDL_ttf/numpy）也会把栈写到 logcat，便于定位
+try:
+    import faulthandler
+    faulthandler.enable()
+except Exception:
+    pass
+
+_IMPORT_ERROR = None  # 各屏/图表导入期异常，build() 时显示到屏幕
+
 from core import TimerController, C, CN_FONT, VERSION
 # 必须在导入任何 kivy 控件之前设置全局默认字体，否则 TextInput 的 IME 候选词、
 # 以及未显式指定 font_name 的控件仍会用 Roboto（无中文字形）→ 中文乱码（#11）。
@@ -34,15 +78,20 @@ from kivy.utils import platform as kivy_platform
 from data_store import DataStore, get_base_dir, PAPER_TYPES
 from ui import make_scroll, cn
 
-import screens.overview as overview
-import screens.add as add
-import screens.timer as timer
-import screens.trends as trends
-import screens.modules as modules
-import screens.compare as compare
-import screens.goals as goals
-import screens.data as data
-import screens.exams as exams
+try:
+    import screens.overview as overview
+    import screens.add as add
+    import screens.timer as timer
+    import screens.trends as trends
+    import screens.modules as modules
+    import screens.compare as compare
+    import screens.goals as goals
+    import screens.data as data
+    import screens.exams as exams
+except Exception as _e:
+    # 导入期异常（如 matplotlib / 某屏语法或运行期错误）不再让整 app 秒退，
+    # 而是记录后在 build() 显示到屏幕，便于定位（#21 闪退根因未知，先暴露出来）
+    _IMPORT_ERROR = "%s: %s\n%s" % (type(_e).__name__, _e, _tb.format_exc())
 
 NAV = [
     ("overview", "总览"),
@@ -59,6 +108,16 @@ NAV = [
 
 class XingceApp(App):
     def build(self):
+        # 导入期异常（如 matplotlib / 某屏）已在 main 顶部捕获，这里直接显示，
+        # 避免“直接闪退无提示”（#21 闪退根因未知，先暴露出来）
+        if _IMPORT_ERROR is not None:
+            return self._error_screen("导入失败：\n" + _IMPORT_ERROR)
+        try:
+            return self._build_ui()
+        except Exception:
+            return self._error_screen("启动构建失败：\n" + _tb.format_exc())
+
+    def _build_ui(self):
         # 手机端让窗口自动撑满整屏（绝不可写死 Window.size，否则会缩成左下角小方块）；
         # 仅桌面调试时用固定尺寸方便预览。
         if kivy_platform != "android":
@@ -79,8 +138,11 @@ class XingceApp(App):
         # 屏幕管理
         self.sm = __import__("kivy.uix.screenmanager", fromlist=["ScreenManager"]).ScreenManager()
         for name, _ in NAV:
-            screen = self._make_screen(name)
-            self.sm.add_widget(screen)
+            try:
+                screen = self._make_screen(name)
+                self.sm.add_widget(screen)
+            except Exception:
+                return self._error_screen("构建屏幕 %s 失败：\n%s" % (name, _tb.format_exc()))
         content.add_widget(self.sm)
 
         # 底部导航（横向滚动，9 个按钮）
@@ -107,6 +169,29 @@ class XingceApp(App):
         self.root = root
         self._highlight("overview")
         return root
+
+    def _error_screen(self, msg):
+        """启动期异常可视化：让用户在屏幕上直接看到报错，便于定位（不再“直接闪退无提示”）。"""
+        from kivy.uix.screenmanager import ScreenManager, Screen
+        from kivy.uix.scrollview import ScrollView
+        from kivy.uix.label import Label
+        _write_crash(msg)
+        sm = ScreenManager()
+        sc = Screen(name="error")
+        sv = ScrollView(size_hint=(1, 1))
+        # 用 Kivy 内置 Roboto，避免依赖自定义字体导致二次崩溃
+        lb = Label(
+            text="行测APP启动失败\n\n" + msg,
+            font_name="Roboto", font_size=dp(13),
+            color=(0.85, 0.15, 0.15, 1),
+            size_hint_y=None, text_size=(dp(360), None),
+            halign="left", valign="top",
+        )
+        lb.bind(texture_size=lb.setter("height"))
+        sv.add_widget(lb)
+        sc.add_widget(sv)
+        sm.add_widget(sc)
+        return sm
 
     def _make_screen(self, name):
         mapping = {
@@ -193,4 +278,9 @@ class XingceApp(App):
 
 
 if __name__ == "__main__":
-    XingceApp().run()
+    try:
+        XingceApp().run()
+    except Exception:
+        # run() 内未捕获的顶层异常：写文件，便于回看（屏幕型异常已由 build() 拦截）
+        _write_crash("=== run() 顶层异常 ===\n" + _tb.format_exc())
+        raise
