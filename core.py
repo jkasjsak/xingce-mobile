@@ -13,7 +13,7 @@ GREEN = "#22a06b"
 ORANGE = "#E0922B"
 
 # 应用版本号（与 buildozer.spec 保持一致；#14 需要在界面可见）
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 
 def is_pure_ttf(path):
@@ -51,6 +51,31 @@ def find_font():
 
 
 CN_FONT = find_font()
+
+
+def public_download_dir():
+    """导出/存图的目标目录：安卓优先 /sdcard/Download；桌面用 ~/Downloads。
+
+    Android 11+ 走作用域存储，/sdcard/Download 可能因权限失败 → 回退到应用私有
+    目录（App.user_data_dir/exports），保证「存得到」而不是静默失败（D）。
+    """
+    import os
+    from kivy.utils import platform as _plat
+    if _plat == "android":
+        d = "/sdcard/Download"
+    else:
+        d = os.path.expanduser("~/Downloads")
+    try:
+        os.makedirs(d, exist_ok=True)
+        return d
+    except Exception:
+        try:
+            from kivy.app import App
+            alt = os.path.join(getattr(App.get_running_app(), "user_data_dir", "."), "exports")
+            os.makedirs(alt, exist_ok=True)
+            return alt
+        except Exception:
+            return d
 
 
 def pct(x):
@@ -177,7 +202,8 @@ class TimerController:
         if self.state["paused"]:
             return self.state["accum"]
         if self.state["end"]:
-            return self.state["accum"] + (self.state["end"] - self.state["seg_start"]).total_seconds()
+            # stop() 已把最后一段并入 accum，直接返回最终累计值，避免重复累加（E）
+            return self.state["accum"]
         return self.state["accum"] + (now - self.state["seg_start"]).total_seconds()
 
 

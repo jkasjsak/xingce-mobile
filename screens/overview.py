@@ -38,7 +38,7 @@ class OverviewScreen(BaseScreen):
             latest = exams[0]
             est = store.score_estimate(latest)
             st = store.exam_stat(latest)
-            _row(card, "考试场次", f"{len(store.list_exams(paper_types=pts))} 场")
+            _row(card, "考试场次", f"{len(exams)} 场")
             _row(card, "最新估分", f"{est['score']:.1f} 分", (0.13, 0.63, 0.42, 1))
             _row(card, "最新正确率", pct(st["overall_acc"]), (0.18, 0.43, 0.93, 1))
             trend = store.overall_trend(paper_types=pts)

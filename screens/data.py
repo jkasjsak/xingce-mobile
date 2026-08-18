@@ -11,7 +11,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.metrics import dp
 
 from ui import make_scroll, header, Card, kv_button, cn
-from core import ACCENT, C, VERSION
+from core import ACCENT, C, VERSION, public_download_dir
 from screens.base import BaseScreen
 from data_store import PAPER_TYPES
 
@@ -75,21 +75,18 @@ class DataScreen(BaseScreen):
 
     # ---- 导入导出 ----
     def _export(self):
-        from kivy.utils import platform as kplatform
-        if kplatform == "android":
-            d = "/sdcard/Download"
-        else:
-            d = os.path.expanduser("~/Downloads")
-        os.makedirs(d, exist_ok=True)
+        d = public_download_dir()  # 安卓 11+ 作用域存储兜底，存不到下载目录时回退应用私有目录（D）
         fn = os.path.join(d, f"行测数据_{datetime.datetime.now():%Y%m%d_%H%M%S}.json")
         try:
             self.app().store.export_json(fn)
-            self.app().toast(f"已导出：{fn}")
+            self.app().toast(f"已导出：{os.path.basename(fn)}")
         except Exception as ex:
             self.app().toast(f"导出失败：{ex}")
 
     def _import(self):
-        fc = FileChooserListView(filters=["*.json"], path=os.path.expanduser("~"))
+        from kivy.utils import platform as kplatform
+        fc_path = "/sdcard/Download" if kplatform == "android" else os.path.expanduser("~")
+        fc = FileChooserListView(filters=["*.json"], path=fc_path)
         def on_sel(inst, sel, *a):
             if sel:
                 try:

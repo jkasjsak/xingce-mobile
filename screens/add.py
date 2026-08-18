@@ -68,11 +68,13 @@ class AddScreen(BaseScreen):
         card = Card(title="答题卡（填错题数 · 可用 －/＋ 微调）")
         self.wrong_inputs = {}
         self.total_labels = {}
+        self.totals = {}
         modules = store.modules()
         existing = exam.get("modules", {}) if exam else {}
         for m in modules:
             key = m["key"]
             total = store.paper_total(key, self.pt)
+            self.totals[key] = total
             row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(40), spacing=dp(4))
             name_lb = Label(
                 text=m["name"], font_name=cn(), font_size=dp(12),
@@ -124,6 +126,7 @@ class AddScreen(BaseScreen):
         store = self.app().store
         for key, tl in self.total_labels.items():
             tl.text = f"共{store.paper_total(key, pt)}题"
+            self.totals[key] = store.paper_total(key, pt)
 
     def _stepper(self, key, delta, tlabel, acc_lb):
         """－/＋ 按钮：按步长调整错题数并刷新正确率（#2）。"""
@@ -133,20 +136,14 @@ class AddScreen(BaseScreen):
                 v = int(raw) if raw else 0
             except Exception:
                 v = 0
-            try:
-                total = int(tlabel.text.replace("共", "").replace("题", "")) or 0
-            except Exception:
-                total = 0
+            total = self.totals.get(key, 0)
             v = max(0, min(total, v + delta))
             self.wrong_inputs[key].text = str(v)
             self._update_acc(key, tlabel, acc_lb)
         return cb
 
     def _update_acc(self, key, tlabel, acc_lb):
-        try:
-            total = int(tlabel.text.replace("共", "").replace("题", ""))
-        except Exception:
-            total = 0
+        total = self.totals.get(key, 0)
         raw = self.wrong_inputs[key].text.strip()
         if not raw:
             acc_lb.text = ""

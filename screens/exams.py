@@ -11,6 +11,31 @@ from core import pct
 from screens.base import BaseScreen
 
 
+class ExamRow(BoxLayout):
+    """可点击行：仅当「按下到抬起位移很小」才打开详情，滚动不误触（F）。"""
+
+    def __init__(self, exam, on_open, **kw):
+        super().__init__(**kw)
+        self._exam = exam
+        self._on_open = on_open
+        self._down = None
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self._down = touch.pos
+        return super().on_touch_down(touch)
+
+    def on_touch_up(self, touch):
+        if self._down is not None:
+            if self.collide_point(*touch.pos):
+                dx = abs(touch.pos[0] - self._down[0])
+                dy = abs(touch.pos[1] - self._down[1])
+                if dx < dp(10) and dy < dp(10):
+                    self._on_open(self._exam)
+            self._down = None
+        return super().on_touch_up(touch)
+
+
 class ExamsScreen(BaseScreen):
     def build(self, box):
         header(box, "考试记录", "全部模考场次")
@@ -22,8 +47,8 @@ class ExamsScreen(BaseScreen):
         for e in exams:
             st = store.exam_stat(e)
             est = store.score_estimate(e)
-            row = BoxLayout(orientation="vertical", size_hint_y=None, height=dp(56), spacing=dp(2),
-                            padding=(dp(4), dp(2)))
+            row = ExamRow(e, self._open_detail, orientation="vertical", size_hint_y=None,
+                          height=dp(56), spacing=dp(2), padding=(dp(4), dp(2)))
             row.add_widget(Label(
                 text=f"{e.get('date','')}  {e.get('name','')}", font_name=cn(), font_size=dp(14),
                 bold=True, color=(0.12,0.15,0.2,1), size_hint_y=None, height=dp(24), halign="left",
@@ -33,7 +58,6 @@ class ExamsScreen(BaseScreen):
                 font_name=cn(), font_size=dp(12), color=(0.45,0.5,0.56,1),
                 size_hint_y=None, height=dp(20), halign="left",
             ))
-            row.bind(on_touch_down=lambda inst, ev, ex=e: self._open_detail(ex) if inst.collide_point(*ev.pos) and ev.button == "left" else None)
             box.add_widget(row)
 
     def _open_detail(self, exam):

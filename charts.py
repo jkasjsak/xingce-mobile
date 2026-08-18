@@ -27,7 +27,7 @@ from kivy.core.image import Image as CoreImage
 from kivy.metrics import dp
 from kivy.utils import platform as kplatform
 
-from core import CN_FONT, C, is_pure_ttf
+from core import CN_FONT, C, is_pure_ttf, public_download_dir
 
 DPI = 85
 
@@ -103,19 +103,31 @@ class KivyChart(BoxLayout):
             self.add_widget(bar)
 
     def set_figure(self, fig):
+        # 关闭上一帧遗留/被替换的 fig，避免反复切卷型重建造成内存泄漏（B）
+        if self.fig is not None:
+            try:
+                plt.close(self.fig)
+            except Exception:
+                pass
         self.fig = fig
         # 延后一帧渲染，避免图表创建阻塞切页（#8 #9）；屏已被销毁则跳过
         Clock.schedule_once(lambda dt: self._render(), 0)
 
     def _render(self):
-        if self.fig is None:
+        fig = self.fig
+        if fig is None:
             return
-        # 控件已从屏幕移除（例如重建），放弃渲染
+        # 控件已从屏幕移除（例如重建）：放弃渲染，但务必释放 fig 防止内存泄漏（B）
         if not self._scatter.parent:
+            try:
+                plt.close(fig)
+            except Exception:
+                pass
+            self.fig = None
             return
         try:
             buf = io.BytesIO()
-            self.fig.savefig(
+            fig.savefig(
                 buf, format="png", dpi=DPI, bbox_inches="tight",
                 transparent=True, facecolor="none",
             )
@@ -133,7 +145,7 @@ class KivyChart(BoxLayout):
         finally:
             # 渲染完即可关闭 fig（图表已转成 PNG 字节），避免反复重建造成内存累积
             try:
-                plt.close(self.fig)
+                plt.close(fig)
             except Exception:
                 pass
             self.fig = None
@@ -151,16 +163,11 @@ class KivyChart(BoxLayout):
         if not self._png:
             return
         from kivy.app import App
-
-        if kplatform == "android":
-            d = "/sdcard/Download"
-        else:
-            d = os.path.expanduser("~/Downloads")
-        os.makedirs(d, exist_ok=True)
+        d = public_download_dir()  # 安卓 11+ 作用域存储兜底，存不到下载目录时回退应用私有目录（D）
         fn = os.path.join(d, f"行测图表_{datetime.datetime.now():%Y%m%d_%H%M%S}.png")
         try:
             with open(fn, "wb") as f:
                 f.write(self._png)
-            App.get_running_app().toast(f"已存图：{fn}")
+            App.get_running_app().toast(f"已存图：{os.path.basename(fn)}\n{d}")
         except Exception:
             App.get_running_app().toast("存图失败")

@@ -148,9 +148,11 @@ class XingceApp(App):
 
         只重建「已经构建过」的屏（未访问的屏首次进入时会自构建，无需提前重建），
         并用 Clock 错峰调度，避免一次同步重建全部图表导致切页卡顿（#8 #9）。
-        计时屏无考试数据依赖，跳过以免重建时误启其 Clock。
+        默认跳过：计时屏（无数据依赖、误建会启其 Clock）；
+        趋势/诊断/对比三屏本就在进入时整屏重建，无需在此预重建
+        → 省下 3 次 matplotlib 重绘，进一步去卡顿（#8 #9，A）。
         """
-        exc = set(exclude or ["timer"])
+        exc = set(exclude or ["timer", "trends", "modules", "compare"])
         for n, _ in NAV:
             if n in exc:
                 continue

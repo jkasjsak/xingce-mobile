@@ -99,21 +99,21 @@ class TimerScreen(BaseScreen):
             self.app().timer.start()
             self._after_action()
         except Exception:
-            import traceback; traceback.print_exc()
+            pass
 
     def _pause(self):
         try:
             self.app().timer.pause()
             self._after_action()
         except Exception:
-            import traceback; traceback.print_exc()
+            pass
 
     def _resume(self):
         try:
             self.app().timer.resume()
             self._after_action()
         except Exception:
-            import traceback; traceback.print_exc()
+            pass
 
     def _reset(self):
         try:
@@ -122,7 +122,7 @@ class TimerScreen(BaseScreen):
             self.elapsed_label.text = fmt_elapsed(0)
             self._refresh_buttons()
         except Exception:
-            import traceback; traceback.print_exc()
+            pass
 
     def _after_action(self):
         try:
@@ -130,7 +130,7 @@ class TimerScreen(BaseScreen):
             self.elapsed_label.text = fmt_elapsed(self.app().timer.elapsed())
             self._refresh_buttons()
         except Exception:
-            import traceback; traceback.print_exc()
+            pass
 
     def _finish(self):
         try:
@@ -148,4 +148,4 @@ class TimerScreen(BaseScreen):
             self._after_action()
             self.app().open_add(None)
         except Exception:
-            import traceback; traceback.print_exc()
+            pass

@@ -28,7 +28,7 @@ source.main = main.py
 requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,pandas,numpy,matplotlib,pillow
 
 # (str) 应用版本
-version = 1.0.1
+version = 1.0.2
 
 # (list) 权限（Android 11+ 走作用域存储；旧版读写下载目录用）
 android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
