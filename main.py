@@ -18,7 +18,9 @@ from core import TimerController, C, CN_FONT, VERSION
 # CN_FONT 是打包进 assets 的纯 TrueType（glyf），Kivy/SDL2 可稳定渲染。
 from kivy.config import Config
 if CN_FONT:
-    Config.set("kivy", "default_font", [CN_FONT, "Roboto", "DejaVuSans"])
+    # 必须是「逗号分隔的字符串」，不能传 list：Kivy 在导入 kivy.core.text 时会
+    # 对 default_font 调 .split(',')，传 list 会在启动时 AttributeError 直接闪退。
+    Config.set("kivy", "default_font", f"{CN_FONT},Roboto,DejaVuSans")
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
