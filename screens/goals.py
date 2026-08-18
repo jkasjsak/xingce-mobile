@@ -18,7 +18,9 @@ class GoalsScreen(BaseScreen):
         row = BoxLayout(size_hint_y=None, height=dp(40))
         row.add_widget(sp)
         box.add_widget(row)
-        self.body = BoxLayout(orientation="vertical")
+        # size_hint_y=None + 绑定 minimum_height：内容自适应撑高，避免被压在顶部（#5）
+        self.body = BoxLayout(orientation="vertical", size_hint_y=None)
+        self.body.bind(minimum_height=self.body.setter("height"))
         box.add_widget(self.body)
         self._render()
 

@@ -15,7 +15,9 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
+from kivy.clock import Clock
 from kivy.uix.scatter import Scatter
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
@@ -25,16 +27,26 @@ from kivy.core.image import Image as CoreImage
 from kivy.metrics import dp
 from kivy.utils import platform as kplatform
 
-from core import CN_FONT, C
+from core import CN_FONT, C, is_pure_ttf
 
 DPI = 85
 
-# matplotlib 中文与负号
-if CN_FONT:
-    plt.rcParams["font.sans-serif"] = [CN_FONT]
-else:
-    plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "WenQuanYi Micro Hei"]
-plt.rcParams["axes.unicode_minus"] = False
+
+def _register_cn_font():
+    """把打包的纯 TrueType 注册进 matplotlib（用字体族名而非路径，否则中文字幕变方框）。"""
+    if CN_FONT and is_pure_ttf(CN_FONT):
+        try:
+            fm.fontManager.addfont(CN_FONT)
+            name = fm.FontProperties(fname=CN_FONT).get_name()
+            plt.rcParams["font.sans-serif"] = [name, "DejaVu Sans"]
+        except Exception:
+            plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
+    else:
+        plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
+    plt.rcParams["axes.unicode_minus"] = False
+
+
+_register_cn_font()
 
 
 def _cn_font_name():
@@ -47,6 +59,7 @@ class KivyChart(BoxLayout):
         super().__init__(orientation="vertical", size_hint_y=None, height=dp(360), **kw)
         self.figsize = figsize
         self.fig = None
+        self._png = None  # 已渲染的 PNG 字节，供「存图」复用（#10 存错图的根因：fig 被提前 close）
         self._scatter = Scatter(
             do_rotation=False,
             do_scale=True,
@@ -54,7 +67,7 @@ class KivyChart(BoxLayout):
             scale_max=4.0,
             size_hint=(1, 1),
         )
-        self._img = Image()
+        self._img = Image(allow_stretch=True, keep_ratio=True)
         self._scatter.add_widget(self._img)
         self.add_widget(self._scatter)
         if export:
@@ -91,35 +104,39 @@ class KivyChart(BoxLayout):
 
     def set_figure(self, fig):
         self.fig = fig
-        self._render()
+        # 延后一帧渲染，避免图表创建阻塞切页（#8 #9）；屏已被销毁则跳过
+        Clock.schedule_once(lambda dt: self._render(), 0)
 
     def _render(self):
         if self.fig is None:
             return
-        buf = io.BytesIO()
+        # 控件已从屏幕移除（例如重建），放弃渲染
+        if not self._scatter.parent:
+            return
         try:
+            buf = io.BytesIO()
             self.fig.savefig(
                 buf, format="png", dpi=DPI, bbox_inches="tight",
                 transparent=True, facecolor="none",
             )
-        except Exception:
-            return
-        buf.seek(0)
-        try:
+            self._png = buf.getvalue()
+            buf.seek(0)
             ci = CoreImage(buf, ext="png")
             self._img.texture = ci.texture
+            self._img.size = ci.texture.size
             self._scatter.transform.identity()
             self._scatter.scale = 1.0
             self._scatter.pos = (0, 0)
             self._scatter.rotation = 0
         except Exception:
-            pass
+            self._png = None
         finally:
+            # 渲染完即可关闭 fig（图表已转成 PNG 字节），避免反复重建造成内存累积
             try:
-                import matplotlib.pyplot as plt
                 plt.close(self.fig)
             except Exception:
                 pass
+            self.fig = None
 
     def reset_view(self):
         try:
@@ -131,7 +148,7 @@ class KivyChart(BoxLayout):
             pass
 
     def save_image(self):
-        if self.fig is None:
+        if not self._png:
             return
         from kivy.app import App
 
@@ -142,7 +159,8 @@ class KivyChart(BoxLayout):
         os.makedirs(d, exist_ok=True)
         fn = os.path.join(d, f"行测图表_{datetime.datetime.now():%Y%m%d_%H%M%S}.png")
         try:
-            self.fig.savefig(fn, dpi=110, bbox_inches="tight", facecolor="white")
+            with open(fn, "wb") as f:
+                f.write(self._png)
             App.get_running_app().toast(f"已存图：{fn}")
         except Exception:
             App.get_running_app().toast("存图失败")

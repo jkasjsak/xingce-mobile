@@ -11,7 +11,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.metrics import dp
 
 from ui import make_scroll, header, Card, kv_button, cn
-from core import ACCENT
+from core import ACCENT, C, VERSION
 from screens.base import BaseScreen
 from data_store import PAPER_TYPES
 
@@ -65,6 +65,13 @@ class DataScreen(BaseScreen):
         bak_card.add_widget(self.bak_box)
         self._render_backups()
         box.add_widget(bak_card)
+
+        # 版本号（#14：需在界面可见）
+        box.add_widget(Label(
+            text=f"行测模考分析 · 手机版 v{VERSION}",
+            font_name=cn(), font_size=dp(11), color=C("muted"),
+            size_hint_y=None, height=dp(26), halign="center",
+        ))
 
     # ---- 导入导出 ----
     def _export(self):

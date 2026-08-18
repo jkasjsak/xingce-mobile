@@ -51,6 +51,12 @@ class ExamsScreen(BaseScreen):
         info.add_widget(_kv("预估成绩", f"{est['score']:.1f} 分"))
         if exam.get("duration_min"):
             info.add_widget(_kv("用时", f"{exam['duration_min']} 分钟"))
+        if exam.get("start_time"):
+            info.add_widget(_kv("开始时间", exam["start_time"]))
+        if exam.get("end_time"):
+            info.add_widget(_kv("结束时间", exam["end_time"]))
+        if exam.get("note"):
+            info.add_widget(_kv("备注", exam["note"]))
         body.add_widget(info)
 
         mc = Card(title="各模块正确率")

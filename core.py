@@ -12,18 +12,40 @@ RED = "#e5534b"
 GREEN = "#22a06b"
 ORANGE = "#E0922B"
 
+# 应用版本号（与 buildozer.spec 保持一致；#14 需要在界面可见）
+VERSION = "1.0.1"
+
+
+def is_pure_ttf(path):
+    """判断是否为「纯 TrueType（glyf）」，即 Kivy/SDL2 可稳定渲染的中文字体。
+
+    拒绝 OTTO（CFF/OTF）与 ttc（TrueType Collection）：它们在安卓上加载不稳，
+    会导致中文乱码 + 动态文字控件重建时崩溃闪退（#3 #6 #11 的根因）。
+    """
+    try:
+        with open(path, "rb") as f:
+            h = f.read(4)
+        return h in (b"\x00\x01\x00\x00", b"true")
+    except Exception:
+        return False
+
 
 def find_font():
-    """中文显示字体：桌面优先系统微软雅黑；手机打包需把字体放到 fonts/msyh.ttf。"""
+    """只接受打包进 assets 的纯 TrueType 中文字体（fonts/msyh.ttf）。
+
+    绝不复盘到系统 TTC/OTF：那些字体在安卓上 Kivy/SDL2 无法稳定渲染，
+    会引发中文乱码与切页/计时时文字控件重建崩溃。找不到就返回空串（退回 Roboto）。
+    """
+    base = os.path.dirname(os.path.abspath(__file__))
     candidates = [
-        os.path.join(os.path.dirname(__file__), "fonts", "msyh.ttf"),
-        r"C:\Windows\Fonts\msyh.ttf",
-        r"C:\Windows\Fonts\msyh.ttc",
-        "/system/fonts/NotoSansCJK-Regular.ttc",
-        "/system/fonts/NotoSansSC-Regular.otf",
+        os.path.join(base, "fonts", "msyh.ttf"),
+        os.path.join(base, "msyh.ttf"),
+        os.path.join(os.getcwd(), "fonts", "msyh.ttf"),
+        os.path.join(os.getcwd(), "msyh.ttf"),
     ]
     for c in candidates:
-        if os.path.exists(c):
+        c = os.path.abspath(c)
+        if os.path.isfile(c) and is_pure_ttf(c):
             return c
     return ""
 

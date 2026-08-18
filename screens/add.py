@@ -6,10 +6,11 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
+from kivy.uix.button import Button
 from kivy.metrics import dp
 
 from ui import make_scroll, header, Card, kv_button, cn, paper_spinner
-from core import pct, ACCENT
+from core import pct, ACCENT, C
 from screens.base import BaseScreen
 from data_store import PAPER_TYPES
 
@@ -55,10 +56,16 @@ class AddScreen(BaseScreen):
         info.add_widget(_labelled("日期", self.date_input))
         info.add_widget(_labelled("名称", self.name_input))
         info.add_widget(_labelled("卷型", sp))
+        self.note_input = TextInput(
+            text=(exam.get("note", "") if exam else ""),
+            hint_text="备注（可选）", size_hint=(1, None), height=dp(38),
+            font_name=cn(), font_size=dp(13), multiline=False,
+        )
+        info.add_widget(_labelled("备注", self.note_input))
         box.add_widget(info)
 
         # 模块答题卡
-        card = Card(title="答题卡（填错题数）")
+        card = Card(title="答题卡（填错题数 · 可用 －/＋ 微调）")
         self.wrong_inputs = {}
         self.total_labels = {}
         modules = store.modules()
@@ -66,29 +73,41 @@ class AddScreen(BaseScreen):
         for m in modules:
             key = m["key"]
             total = store.paper_total(key, self.pt)
-            row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(40), spacing=dp(6))
+            row = BoxLayout(orientation="horizontal", size_hint_y=None, height=dp(40), spacing=dp(4))
             name_lb = Label(
-                text=m["name"], font_name=cn(), font_size=dp(13),
-                color=(0.2, 0.24, 0.3, 1), size_hint=(0.42, 1), halign="left",
+                text=m["name"], font_name=cn(), font_size=dp(12),
+                color=(0.2, 0.24, 0.3, 1), size_hint=(0.32, 1), halign="left",
             )
             tlabel = Label(
-                text=f"共{total}题", font_name=cn(), font_size=dp(12),
-                color=(0.45, 0.5, 0.56, 1), size_hint=(0.2, 1), halign="center",
+                text=f"共{total}题", font_name=cn(), font_size=dp(11),
+                color=(0.45, 0.5, 0.56, 1), size_hint=(0.16, 1), halign="center",
             )
             self.total_labels[key] = tlabel
+            minus = Button(
+                text="－", size_hint=(0.09, 1), font_name=cn(), font_size=dp(16),
+                background_color=C("surface_alt"), color=C("text"),
+            )
             wi = TextInput(
                 text=str(existing.get(key, {}).get("wrong", "") if isinstance(existing.get(key), dict) else ""),
-                hint_text="错题", input_filter="int", input_type="number",
-                size_hint=(0.22, 1),
+                hint_text="错", input_filter="int", input_type="number",
+                size_hint=(0.14, 1),
                 font_name=cn(), font_size=dp(13), multiline=False,
             )
             self.wrong_inputs[key] = wi
-            acc_lb = Label(text="", font_name=cn(), font_size=dp(12),
-                          color=(0.18, 0.43, 0.93, 1), size_hint=(0.16, 1), halign="right")
+            plus = Button(
+                text="＋", size_hint=(0.09, 1), font_name=cn(), font_size=dp(16),
+                background_color=C("surface_alt"), color=C("text"),
+            )
+            acc_lb = Label(text="", font_name=cn(), font_size=dp(11),
+                          color=(0.18, 0.43, 0.93, 1), size_hint=(0.2, 1), halign="right")
+            minus.bind(on_press=self._stepper(key, -1, tlabel, acc_lb))
+            plus.bind(on_press=self._stepper(key, 1, tlabel, acc_lb))
             wi.bind(text=lambda inst, val, k=key, tl=tlabel, al=acc_lb: self._update_acc(k, tl, al))
             row.add_widget(name_lb)
             row.add_widget(tlabel)
+            row.add_widget(minus)
             row.add_widget(wi)
+            row.add_widget(plus)
             row.add_widget(acc_lb)
             card.add_widget(row)
         box.add_widget(card)
@@ -105,6 +124,23 @@ class AddScreen(BaseScreen):
         store = self.app().store
         for key, tl in self.total_labels.items():
             tl.text = f"共{store.paper_total(key, pt)}题"
+
+    def _stepper(self, key, delta, tlabel, acc_lb):
+        """－/＋ 按钮：按步长调整错题数并刷新正确率（#2）。"""
+        def cb(*a):
+            raw = self.wrong_inputs[key].text.strip()
+            try:
+                v = int(raw) if raw else 0
+            except Exception:
+                v = 0
+            try:
+                total = int(tlabel.text.replace("共", "").replace("题", "")) or 0
+            except Exception:
+                total = 0
+            v = max(0, min(total, v + delta))
+            self.wrong_inputs[key].text = str(v)
+            self._update_acc(key, tlabel, acc_lb)
+        return cb
 
     def _update_acc(self, key, tlabel, acc_lb):
         try:
@@ -146,16 +182,18 @@ class AddScreen(BaseScreen):
 
         date_str = self.date_input.text.strip() or date.today().isoformat()
         name = self.name_input.text.strip()
+        note = self.note_input.text.strip()
 
         pending = getattr(self.app(), "pending_timer", None) or {}
         if eid:
             store.update_exam(eid, date=date_str, name=name, paper_type=pt, modules=modules,
+                              note=note,
                               duration_min=pending.get("duration_min"),
                               start_time=pending.get("start_time"),
                               end_time=pending.get("end_time"))
             msg = "已更新成绩"
         else:
-            store.add_exam(date_str, name, modules, paper_type=pt,
+            store.add_exam(date_str, name, modules, paper_type=pt, note=note,
                            duration_min=pending.get("duration_min"),
                            start_time=pending.get("start_time"),
                            end_time=pending.get("end_time"))

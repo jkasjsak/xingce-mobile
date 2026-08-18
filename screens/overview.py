@@ -41,10 +41,17 @@ class OverviewScreen(BaseScreen):
             _row(card, "考试场次", f"{len(store.list_exams(paper_types=pts))} 场")
             _row(card, "最新估分", f"{est['score']:.1f} 分", (0.13, 0.63, 0.42, 1))
             _row(card, "最新正确率", pct(st["overall_acc"]), (0.18, 0.43, 0.93, 1))
-            slope = store.overall_slope(paper_types=pts)
-            arrow = "↑" if slope > 0.005 else ("↓" if slope < -0.005 else "→")
-            sc = (0.13, 0.63, 0.42, 1) if slope >= 0 else (0.9, 0.33, 0.29, 1)
-            _row(card, "正确率斜率", f"{arrow} {abs(slope)*100:.2f}%/场", sc)
+            trend = store.overall_trend(paper_types=pts)
+            if len(trend) >= 2:
+                first_acc = trend[0][1]
+                last_acc = trend[-1][1]
+                delta = last_acc - first_acc
+                arrow = "↑" if delta > 0.005 else ("↓" if delta < -0.005 else "→")
+                sc = (0.13, 0.63, 0.42, 1) if delta >= 0 else (0.9, 0.33, 0.29, 1)
+                _row(card, "正确率走向",
+                     f"{arrow} {first_acc*100:.1f}%→{last_acc*100:.1f}%（{abs(delta)*100:.1f}点）", sc)
+            else:
+                _row(card, "正确率走向", "样本不足（≥2场）", (0.45, 0.5, 0.56, 1))
             goal = store.get_overall_goal(paper_types=pts)
             _row(card, "总体目标", pct(goal), (0.88, 0.57, 0.17, 1))
         box.add_widget(card)

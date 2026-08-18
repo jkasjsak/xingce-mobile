@@ -39,9 +39,13 @@ class TimerScreen(BaseScreen):
         t = self.app().timer
 
         big = Card(title="")
+        big.add_widget(Label(
+            text="已用时", font_name=cn(), font_size=dp(14),
+            color=(0.45, 0.5, 0.56, 1), size_hint_y=None, height=dp(22), halign="center",
+        ))
         self.elapsed_label = Label(
             text=fmt_elapsed(t.elapsed()), font_name=cn(), font_size=dp(46), bold=True,
-            color=(0.12, 0.15, 0.2, 1), size_hint_y=None, height=dp(70), halign="center",
+            color=(0.12, 0.15, 0.2, 1), size_hint_y=None, height=dp(64), halign="center",
         )
         big.add_widget(self.elapsed_label)
         self.status_label = Label(

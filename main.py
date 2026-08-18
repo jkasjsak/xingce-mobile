@@ -12,17 +12,24 @@
 import os
 import sys
 
+from core import TimerController, C, CN_FONT, VERSION
+# 必须在导入任何 kivy 控件之前设置全局默认字体，否则 TextInput 的 IME 候选词、
+# 以及未显式指定 font_name 的控件仍会用 Roboto（无中文字形）→ 中文乱码（#11）。
+# CN_FONT 是打包进 assets 的纯 TrueType（glyf），Kivy/SDL2 可稳定渲染。
+from kivy.config import Config
+if CN_FONT:
+    Config.set("kivy", "default_font", [CN_FONT, "Roboto", "DejaVuSans"])
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.utils import platform as kivy_platform
 
 from data_store import DataStore, get_base_dir, PAPER_TYPES
-from core import ACCENT, TimerController, C
 from ui import make_scroll, cn
 
 import screens.overview as overview
@@ -134,8 +141,27 @@ class XingceApp(App):
             if scr:
                 scr.rebuild()
 
-    def refresh_all(self):
-        self.refresh(*[n for n, _ in NAV])
+    def refresh_all(self, exclude=None):
+        """数据变更后刷新相关屏。
+
+        只重建「已经构建过」的屏（未访问的屏首次进入时会自构建，无需提前重建），
+        并用 Clock 错峰调度，避免一次同步重建全部图表导致切页卡顿（#8 #9）。
+        计时屏无考试数据依赖，跳过以免重建时误启其 Clock。
+        """
+        exc = set(exclude or ["timer"])
+        for n, _ in NAV:
+            if n in exc:
+                continue
+            scr = self.sm.get_screen(n)
+            if scr and getattr(scr, "_built", False):
+                Clock.schedule_once(lambda dt, s=scr: s.rebuild(), 0)
+
+    def on_resume(self):
+        """App 从锁屏/后台恢复：若在计时屏，重启计时刷新（#13 锁屏后继续计时）。"""
+        scr = self.sm.current_screen
+        if scr and getattr(scr, "name", None) == "timer" and hasattr(scr, "_start_clock"):
+            scr._start_clock()
+        return True
 
     # ---- 录入编辑态 ----
     def open_add(self, eid=None):
