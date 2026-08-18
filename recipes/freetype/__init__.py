@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """本地覆盖 freetype recipe：绕开 download.savannah.gnu.org 长期 502。
 
-根因：p4a 内置 freetype 从 savannah 下载，镜像长期 502 导致构建失败。
-改用 GitHub 官方仓库（CI runner 必能连）。但 GitHub 归档
-（archive/refs/tags/VER-2-14-1.tar.gz）因 .gitattributes `export-ignore`
-不含生成的 ./configure，且不含 git 子模块 dlg，直接用来编译会失败。
+根因链（逐个已修）：
+1. p4a 内置 freetype 从 savannah 下载，镜像长期 502 → 改用 GitHub 源。
+2. GitHub 归档（archive/refs/tags/VER-2-14-1.tar.gz）因 .gitattributes
+   `export-ignore` 不含生成的 ./configure，也不含 git 子模块 dlg →
+   改为 `git clone --recursive` 拉全量源码覆盖进 build 目录。
+3. git 源码树里 builds/unix/configure 是【生成物】（被 .gitignore 忽略，
+   由根目录 autogen.sh 生成）。缺它时顶层 ./configure 会执行
+   `cd builds/unix; ./configure ...` 并报 `/bin/sh: ./configure: not found`
+   （make: *** [builds/unix/detect.mk:91: setup] Error 127）。
+   → 在 p4a 调 configure 之前先跑 `sh autogen.sh` 补齐。
+   CI 已安装 autoconf/automake/libtool/libtool-bin/pkg-config/libltdl-dev，
+   autogen.sh 所需工具齐全。
 
-解法（build_arch 内）：
-- p4a 照常下载并解包 GitHub 归档；
-- 但若 build 目录缺少 ./configure 或 subprojects/dlg/include/dlg/output.h，
-  则 git clone 该 tag 的【全量源码】（--recursive 拉齐 dlg 子模块），
-  整体覆盖进 build 目录，使 ./configure 与 dlg 一次到位。
+以上步骤全部幂等：文件已存在则直接跳过，不重复 clone / 不重复 autogen。
 """
 import os
 import shutil
@@ -23,8 +27,8 @@ FT_TAG = "VER-2-14-1"
 FT_URL = "https://github.com/freetype/freetype.git"
 
 
-def _run(cmd, cwd=None):
-    subprocess.check_call(cmd, cwd=cwd)
+def _run(cmd, cwd=None, env=None):
+    subprocess.check_call(cmd, cwd=cwd, env=env)
 
 
 def _overlay(src, dst):
@@ -63,9 +67,37 @@ class FreetypeRecipe(_Base):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def _ensure_unix_configure(self, build_dir):
+        """builds/unix/configure 是 autogen.sh 的生成物，git 源码树里没有；缺则生成。"""
+        unix_cfg = os.path.join(build_dir, "builds", "unix", "configure")
+        if os.path.exists(unix_cfg):
+            os.chmod(unix_cfg, 0o755)
+            return
+        autogen = os.path.join(build_dir, "autogen.sh")
+        if not os.path.exists(autogen):
+            raise RuntimeError(
+                "freetype source missing both builds/unix/configure and autogen.sh: %s"
+                % build_dir
+            )
+        env = os.environ.copy()
+        # autogen.sh 用 GNUMAKE 定位 GNU make；显式指定避免个别环境探测失败。
+        env.setdefault("GNUMAKE", "make")
+        # 用宿主工具链生成 configure（与交叉编译环境无关），故用干净的 os.environ。
+        _run(["sh", "autogen.sh"], cwd=build_dir, env=env)
+        if not os.path.exists(unix_cfg):
+            raise RuntimeError(
+                "autogen.sh finished but builds/unix/configure still missing: %s"
+                % unix_cfg
+            )
+        os.chmod(unix_cfg, 0o755)
+        top_cfg = os.path.join(build_dir, "configure")
+        if os.path.exists(top_cfg):
+            os.chmod(top_cfg, 0o755)
+
     def build_arch(self, arch):
         build_dir = self.get_build_dir(arch)
         self._ensure_full_source(build_dir)
+        self._ensure_unix_configure(build_dir)
         super().build_arch(arch)
 
 
