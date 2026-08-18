@@ -13,3 +13,9 @@ from pythonforandroid.recipes.freetype import FreetypeRecipe
 
 class FreetypeRecipe(FreetypeRecipe):
     url = 'https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-1.tar.gz'
+
+
+# p4a 的 Recipe.get_recipe 通过 `mod.recipe` 获取 recipe 实例，本地覆盖 recipe
+# 必须按官方约定在模块级暴露该实例，否则会报
+# "module 'pythonforandroid.recipes.freetype' has no attribute 'recipe'"。
+recipe = FreetypeRecipe()
