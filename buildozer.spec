@@ -27,6 +27,10 @@ source.main = main.py
 # python-dateutil/pytz/six）由 p4a 作为 matplotlib 的传递依赖自动解析。
 requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,pandas,numpy,matplotlib,pillow
 
+# (str) 本地 p4a recipe 目录：覆盖内置 freetype 下载源，绕开 savannah 长期 502
+# （详见 recipes/freetype/__init__.py 注释）
+p4a.local_recipes = recipes
+
 # (str) 应用版本
 version = 1.0.2
 
