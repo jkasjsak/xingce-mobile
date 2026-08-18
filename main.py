@@ -56,29 +56,32 @@ except Exception:
 
 _IMPORT_ERROR = None  # 各屏/图表导入期异常，build() 时显示到屏幕
 
-from core import TimerController, C, CN_FONT, VERSION
-# 必须在导入任何 kivy 控件之前设置全局默认字体，否则 TextInput 的 IME 候选词、
-# 以及未显式指定 font_name 的控件仍会用 Roboto（无中文字形）→ 中文乱码（#11）。
-# CN_FONT 是打包进 assets 的纯 TrueType（glyf），Kivy/SDL2 可稳定渲染。
-from kivy.config import Config
-if CN_FONT:
-    # 必须是「逗号分隔的字符串」，不能传 list：Kivy 在导入 kivy.core.text 时会
-    # 对 default_font 调 .split(',')，传 list 会在启动时 AttributeError 直接闪退。
-    Config.set("kivy", "default_font", f"{CN_FONT},Roboto,DejaVuSans")
-from kivy.app import App
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.scrollview import ScrollView
-from kivy.clock import Clock
-from kivy.core.window import Window
-from kivy.metrics import dp
-from kivy.utils import platform as kivy_platform
-
-from data_store import DataStore, get_base_dir, PAPER_TYPES
-from ui import make_scroll, cn
-
+# 所有「导入期」代码统一保护：任何一处（core / kivy / data_store / ui / 9 个屏）
+# 在安卓上失败都不再直接闪退无提示，而是记录并在 build() 显示到屏幕。
+# （#21/#30 长期闪退根因未知，先让 Python 层错误可见；原生崩溃仍需 adb logcat）
 try:
+    from core import TimerController, C, CN_FONT, VERSION
+    # 必须在导入任何 kivy 控件之前设置全局默认字体，否则 TextInput 的 IME 候选词、
+    # 以及未显式指定 font_name 的控件仍会用 Roboto（无中文字形）→ 中文乱码（#11）。
+    # CN_FONT 是打包进 assets 的纯 TrueType（glyf），Kivy/SDL2 可稳定渲染。
+    from kivy.config import Config
+    if CN_FONT:
+        # 必须是「逗号分隔的字符串」，不能传 list：Kivy 在导入 kivy.core.text 时会
+        # 对 default_font 调 .split(',')，传 list 会在启动时 AttributeError 直接闪退。
+        Config.set("kivy", "default_font", f"{CN_FONT},Roboto,DejaVuSans")
+    from kivy.app import App
+    from kivy.uix.floatlayout import FloatLayout
+    from kivy.uix.boxlayout import BoxLayout
+    from kivy.uix.button import Button
+    from kivy.uix.scrollview import ScrollView
+    from kivy.clock import Clock
+    from kivy.core.window import Window
+    from kivy.metrics import dp
+    from kivy.utils import platform as kivy_platform
+
+    from data_store import DataStore, get_base_dir, PAPER_TYPES
+    from ui import make_scroll, cn
+
     import screens.overview as overview
     import screens.add as add
     import screens.timer as timer
