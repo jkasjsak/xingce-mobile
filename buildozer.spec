@@ -42,7 +42,9 @@ android.api = 34
 android.minapi = 24
 
 # (str) 显式指定 NDK 版本（buildozer 自动下载，无需许可证）
-android.ndk = 28c
+# 关键修复：Kivy 2.3.1 官方仅验证 NDK r25b/r23c，原 28c 编译出的 SDL2/numpy 原生库
+# 与 Android 运行时 ABI 不兼容，导致「构建成功、装上即闪退无提示」（#21/#30 闪退根因）。
+android.ndk = r25b
 
 # (str) 目标 CPU 架构（现代手机主流 arm64；如需兼容旧机可加 armeabi-v7a）
 android.archs = arm64-v8a
